@@ -1,0 +1,11 @@
+# 除了extension所必需的程序文件，其他的都在gitignore排除掉。
+node_modules/
+*.log
+*.tmp
+*.map
+.vscode/
+*.zip
+*.油猴.json
+*.123.html
+# 文档文件
+*.md

@@ -4,7 +4,7 @@
     <title>AI Chat Exporter</title>
     <style>
         body {
-            width: 200px;
+            width: 220px;
             padding: 15px;
             text-align: center;
             font-family: Arial, sans-serif;
@@ -14,12 +14,14 @@
         h3 {
             color: #333;
             margin-bottom: 15px;
+            font-size: 16px;
         }
 
         .subtitle {
             color: #666;
-            font-size: 12px;
+            font-size: 11px;
             margin-bottom: 15px;
+            line-height: 1.4;
         }
 
         #download {
@@ -31,6 +33,7 @@
             cursor: pointer;
             font-size: 14px;
             transition: background-color 0.3s;
+            width: 100%;
         }
 
         #download:hover {
@@ -40,12 +43,17 @@
         #download:active {
             transform: scale(0.98);
         }
+
+        #download:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
     </style>
     <script src="popup.js"></script>
 </head>
 <body>
     <h3>AI Chat Exporter</h3>
-    <div class="subtitle">Only supports DeepSeek, YuanBao AI and ChatGPT</div>
+    <div class="subtitle">支持 DeepSeek、元宝AI、ChatGPT 和豆包</div>
     <button id="download">Export Chat</button>
 </body>
 </html>
