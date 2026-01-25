@@ -6,45 +6,55 @@ document.addEventListener('DOMContentLoaded', () => {
         downloadButton.addEventListener('click', async () => {
             console.log('Button clicked');
             try {
-                // 获取当前标签页
+                // Get current tab
+                console.log('Getting current tab...');
                 const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
                 if (!tab) {
                     console.error('No active tab found');
-                    alert('无法找到当前标签页，请重试。');
+                    alert('Cannot find current tab, please try again.');
                     return;
                 }
+                console.log('Current tab URL:', tab.url);
 
-                // 检查是否为支持的网站
-                const supportedSites = ['deepseek.com', 'deepseek.ai', 'yuanbao.tencent.com', 'chatgpt.com', 'doubao.com'];
+                // Check if it's a supported website
+                const supportedSites = ['deepseek.com', 'deepseek.ai', 'yuanbao.tencent.com', 'chatgpt.com', 'doubao.com', 'gemini.google.com'];
                 const isSupported = supportedSites.some(site => tab.url.includes(site));
 
                 if (!isSupported) {
-                    alert('此插件仅支持 DeepSeek、元宝AI、ChatGPT 和豆包网站。\n请先打开对应的对话页面。');
+                    alert('This extension only supports DeepSeek, YuanBao AI, ChatGPT, Doubao, and Gemini.\nPlease open the corresponding chat page first.');
                     return;
                 }
 
-                // 显示加载状态
-                downloadButton.textContent = '导出中...';
+                // Show loading state
+                downloadButton.textContent = 'Exporting...';
                 downloadButton.disabled = true;
 
+                console.log('Sending message to background script...');
                 chrome.runtime.sendMessage({ action: "download" }, (response) => {
                     if (chrome.runtime.lastError) {
                         console.error('Runtime error:', chrome.runtime.lastError);
-                        alert('导出失败：' + chrome.runtime.lastError.message);
+                        alert('Export failed: ' + chrome.runtime.lastError.message);
                         resetButton();
                         return;
                     }
-                    console.log('Message sent successfully', response);
+                    console.log('Message sent successfully, response:', response);
+                    if (response && response.success) {
+                        console.log('Export successful!');
+                    } else if (response && !response.success) {
+                        console.error('Export failed with error:', response.error);
+                        alert('Export failed: ' + (response.error || 'Unknown error'));
+                    }
                     resetButton();
                 });
 
-                // 3秒后重置按钮（防止长时间无响应）
+                // Reset button after 10 seconds (prevent long timeout)
                 setTimeout(() => {
+                    console.log('Timeout reached, resetting button...');
                     resetButton();
-                }, 3000);
+                }, 10000);
             } catch (error) {
                 console.error('Error in click handler:', error);
-                alert('导出过程中发生错误：' + error.message);
+                alert('Error during export: ' + error.message);
                 resetButton();
             }
         });

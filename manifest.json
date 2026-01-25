@@ -1,11 +1,12 @@
 {
   "manifest_version": 3,
   "name": "AI Chat Exporter",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Export DeepSeek, YuanBao AI, ChatGPT and Doubao chat conversations to Markdown format.",
- "permissions": ["activeTab", "downloads", "scripting", "tabs", "notifications"],
+  "permissions": ["activeTab", "downloads", "scripting", "tabs", "notifications"],
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "src/background.js",
+    "type": "module"
   },
   "icons": {
     "16": "images/icon16.png",
@@ -25,6 +26,7 @@
     "https://*.deepseek.ai/*",
     "https://*.yuanbao.tencent.com/*",
     "https://chatgpt.com/*",
+    "https://gemini.google.com/*",
     "https://*.doubao.com/*"
   ]
 }

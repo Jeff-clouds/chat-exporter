@@ -5,7 +5,14 @@ node_modules/
 *.map
 .vscode/
 *.zip
+
+# 临时文件
 油猴.json
 123.html
-# 文档文件
-*.md
+REFACTORING_PLAN.md
+
+# 重构计划文档（可选）
+# REFACTORING_PLAN_V2.md
+# REFACTORING_SUMMARY.md
+# ARCHITECTURE.md
+# FINAL_CHECK.md
