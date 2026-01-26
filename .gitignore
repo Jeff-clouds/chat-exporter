@@ -3,16 +3,13 @@ node_modules/
 *.log
 *.tmp
 *.map
+*.py
 .vscode/
 *.zip
+*.DS_Store
+old/
+unused/
 
 # 临时文件
 油猴.json
 123.html
-REFACTORING_PLAN.md
-
-# 重构计划文档（可选）
-# REFACTORING_PLAN_V2.md
-# REFACTORING_SUMMARY.md
-# ARCHITECTURE.md
-# FINAL_CHECK.md
