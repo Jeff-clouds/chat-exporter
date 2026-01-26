@@ -95,6 +95,15 @@ Issues and Pull Requests are welcome!
 - **Offline Operation**: The extension does not connect to any third-party servers except for update checks.
 - **Local Storage**: All exported files are saved directly to your computer.
 
+## ☕ Buy me a coffee
+
+If you find this project helpful, feel free to buy me a coffee ☕️
+
+<div align="center">
+  <img src="images/wechat-pay.jpg" alt="WeChat Pay" width="200" style="margin-right: 20px" />
+  <img src="images/alipay.png" alt="Alipay" width="200" />
+</div>
+
 ## ⚖️ License
 
 This project is open-sourced under the [ISC License](LICENSE).

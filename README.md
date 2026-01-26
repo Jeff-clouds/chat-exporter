@@ -104,6 +104,15 @@ cp node_modules/turndown-plugin-gfm/dist/turndown-plugin-gfm.js src/lib/
 - **离线运行**：除了检查更新外，插件不需要连接任何第三方服务器。
 - **本地存储**：所有导出文件均直接保存至您的计算机。
 
+## ☕ 请我喝杯咖啡
+
+如果觉得这个项目对您有帮助，欢迎请作者喝杯咖啡 ☕️
+
+<div align="center">
+  <img src="images/wechat-pay.jpg" alt="微信支付" width="200" style="margin-right: 20px" />
+  <img src="images/alipay.png" alt="支付宝" width="200" />
+</div>
+
 ## ⚖️ 许可证
 
 本项目基于 [ISC 许可证](LICENSE) 开源。
