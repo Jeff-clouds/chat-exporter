@@ -1,0 +1,24 @@
+{
+  "name": "ai-chat-exporter-temp",
+  "version": "1.0.0",
+  "description": "适用于 Chrome 浏览器",
+  "main": "popup.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jeff-clouds/chat-exporter.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Jeff-clouds/chat-exporter/issues"
+  },
+  "homepage": "https://github.com/Jeff-clouds/chat-exporter#readme",
+  "dependencies": {
+    "turndown": "^7.2.2",
+    "turndown-plugin-gfm": "^1.0.2"
+  }
+}

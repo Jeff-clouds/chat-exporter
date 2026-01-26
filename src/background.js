@@ -78,6 +78,12 @@ async function handleDownload() {
     // 3. Inject script to extract data
     console.log('Step 3: Injecting script to extract data...');
     
+    // Inject Turndown and its GFM plugin
+    await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      files: ['src/lib/turndown.js', 'src/lib/turndown-plugin-gfm.js']
+    });
+    
     // Use a simpler approach: pass the platform key and selectors, 
     // then include all extractor logic in the injected function
     const [result] = await chrome.scripting.executeScript({
@@ -131,52 +137,61 @@ async function handleDownload() {
           return content;
         }
 
+        function _htmlToMarkdown(html) {
+            if (!html) return '';
+            
+            // Ensure TurndownService is available
+            if (typeof TurndownService === 'undefined') {
+                console.error('TurndownService is not defined');
+                return html.replace(/<[^>]*>/g, ''); // Fallback to plain text
+            }
+
+            const turndownService = new TurndownService({
+                headingStyle: 'atx',
+                codeBlockStyle: 'fenced',
+                emDelimiter: '*'
+            });
+
+            // Add GFM support if available
+            if (typeof turndownPluginGfm !== 'undefined') {
+                turndownService.use(turndownPluginGfm.gfm);
+            }
+            
+            // Pre-process to remove unwanted elements (like scripts, styles, buttons)
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const body = doc.body;
+            
+            // Remove unwanted tags
+            const unwanted = body.querySelectorAll('script, style, svg, button, input, select, textarea');
+            unwanted.forEach(el => el.remove());
+            
+            return turndownService.turndown(body);
+        }
+
         function _extractContent(answerBlock, selectors) {
-          if (!selectors.markdownBlock) {
-            return answerBlock.textContent.trim();
-          }
-          const markdownBlock = answerBlock.querySelector(selectors.markdownBlock);
-          if (!markdownBlock) return '';
+          // Determine the target element(s) to convert
+          let targets = [];
           
-          function _htmlToMarkdown(html) {
-            let result = html;
-            result = result.replace(/<div[^>]*>/g, '').replace(/<\/div>/g, '');
-            result = result.replace(/<span[^>]*>/g, '').replace(/<\/span>/g, '');
-            result = result.replace(/<h1>/g, '# ').replace(/<\/h1>/g, '\n\n');
-            result = result.replace(/<h2>/g, '## ').replace(/<\/h2>/g, '\n\n');
-            result = result.replace(/<h3>/g, '### ').replace(/<\/h3>/g, '\n\n');
-            result = result.replace(/<h4>/g, '#### ').replace(/<\/h4>/g, '\n\n');
-            result = result.replace(/<li>/g, '- ').replace(/<\/li>/g, '\n');
-            result = result.replace(/<ul>/g, '').replace(/<\/ul>/g, '\n');
-            result = result.replace(/<ol>/g, '').replace(/<\/ol>/g, '\n');
-            result = result.replace(/<strong>/g, '**').replace(/<\/strong>/g, '**');
-            result = result.replace(/<em>/g, '*').replace(/<\/em>/g, '*');
-            result = result.replace(/<code>/g, '`').replace(/<\/code>/g, '`');
-            result = result.replace(/<p>/g, '').replace(/<\/p>/g, '\n\n');
-            result = result.replace(/<br\s*\/?>/g, '\n');
-            result = result.replace(/<hr[^>]*>/g, '---\n\n');
-            result = result.replace(/&lt;/g, '<').replace(/&gt;/g, '>');
-            result = result.replace(/&amp;/g, '&').replace(/&quot;/g, '"');
-            return result.trim();
+          if (selectors.markdownBlock) {
+             const found = answerBlock.querySelectorAll(selectors.markdownBlock);
+             if (found && found.length > 0) {
+               targets = Array.from(found);
+             }
           }
           
-          let content = '';
-          markdownBlock.childNodes.forEach(node => {
-            if (node.classList?.contains(selectors.codeBlock?.replace(/\./g, '')?.split(' ').pop())) {
-              return;
-            }
-            if (selectors.codeBlock && node.querySelector && node.querySelector(selectors.codeBlock)) {
-              return;
-            }
-            let html = node.outerHTML || node.textContent;
-            if (html) {
-              content += _htmlToMarkdown(html);
-            }
-          });
-          return content;
+          // Fallback: if no markdown block found (or selector not provided), use the answer block itself
+          if (targets.length === 0) {
+            targets = [answerBlock];
+          }
+
+          // Convert each target to markdown and join
+          return targets.map(target => _htmlToMarkdown(target.innerHTML)).join('\n\n');
         }
 
         function _extractCodeBlocks(answerBlock, selectors) {
+          // Code blocks are now handled by _htmlToMarkdown, so we might not need to extract them separately
+          // unless for a specific purpose. For now, we keep this to maintain data structure compatibility.
           if (!selectors.codeBlock) return [];
           const codeBlocks = [];
           if (selectors.codeLanguage) {
@@ -218,12 +233,20 @@ async function handleDownload() {
             const count = Math.min(questions.length, answers.length);
             for (let i = 0; i < count; i++) {
               const answerBlock = answers[i];
+              
+              // DeepSeek special handling: remove thinking, only keep answer
+              const answerClone = answerBlock.cloneNode(true);
+              if (selectors.thinking) {
+                const thinkingEls = answerClone.querySelectorAll(selectors.thinking);
+                thinkingEls.forEach(el => el.remove());
+              }
+
               conversations.push({
                 question: questions[i].textContent.trim(),
                 answer: {
                   thinking: _extractThinking(answerBlock, selectors),
                   search: _extractSearch(answerBlock, selectors),
-                  content: _extractContent(answerBlock, selectors),
+                  content: _extractContent(answerClone, selectors),
                   codeBlocks: _extractCodeBlocks(answerBlock, selectors)
                 }
               });
@@ -284,7 +307,7 @@ async function handleDownload() {
                 question: questions[i].textContent.trim(),
                 answer: {
                   search: answerBlock.querySelector(selectors.search)?.textContent?.trim(),
-                  content: answerBlock.textContent.trim()
+                  content: _extractContent(answerBlock, selectors)
                 }
               });
             }
@@ -303,7 +326,7 @@ async function handleDownload() {
               conversations.push({
                 question: questions[i].textContent.trim(),
                 answer: {
-                  content: answerBlock.textContent.trim()
+                  content: _extractContent(answerBlock, selectors)
                 }
               });
             }
@@ -330,6 +353,10 @@ async function handleDownload() {
 
     const unifiedData = result.result;
     console.log('Unified data:', unifiedData);
+
+    // Add metadata
+    unifiedData.url = tab.url;
+    unifiedData.platform = platformConfig.name;
 
     // 4. Check if there is conversation content
     if (!unifiedData.conversations || unifiedData.conversations.length === 0) {

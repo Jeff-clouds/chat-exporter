@@ -12,11 +12,11 @@ const deepseekConfig = {
 
   selectors: {
     title: '.f8d1e4c0',
-    question: '.fbb737a4',
-    answer: '.f9bf7997',
-    thinking: '.edb250b1',
+    question: '._9663006',
+    answer: '._4f9bf79._43c05b5',
+    thinking: '.ds-think-content, ._74c0879',
     search: '.a6d716f5.db5991dd',
-    markdownBlock: '.ds-markdown.ds-markdown--block',
+    markdownBlock: '.ds-markdown',
     codeBlock: '.md-code-block',
     codeLanguage: '.md-code-block-infostring'
   },
@@ -37,12 +37,36 @@ const deepseekConfig = {
     for (let i = 0; i < count; i++) {
       const answerBlock = answers[i];
 
+      // DeepSeek特殊处理：移除思考过程，只保留回答
+      // 克隆节点以避免修改原始DOM
+      const answerClone = answerBlock.cloneNode(true);
+      
+      // 移除思考过程
+      if (selectors.thinking) {
+        const thinkingEls = answerClone.querySelectorAll(selectors.thinking);
+        thinkingEls.forEach(el => el.remove());
+      }
+      
+      let content = '';
+      if (selectors.markdownBlock) {
+        // 在清理后的克隆节点中查找 markdown
+        const markdowns = Array.from(answerClone.querySelectorAll(selectors.markdownBlock));
+        if (markdowns.length > 0) {
+          content = markdowns.map(md => _processMarkdownBlock(md, selectors)).join('\n\n');
+        } else {
+          // 如果没有找到 markdown 块，尝试直接提取文本
+          content = answerClone.textContent.trim();
+        }
+      } else {
+        content = answerClone.textContent.trim();
+      }
+
       conversations.push({
         question: questions[i].textContent.trim(),
         answer: {
           thinking: _extractThinking(answerBlock, selectors),
           search: _extractSearch(answerBlock, selectors),
-          content: _extractContent(answerBlock, selectors),
+          content: content,
           codeBlocks: _extractCodeBlocks(answerBlock, selectors)
         }
       });
@@ -207,7 +231,8 @@ const geminiConfig = {
   selectors: {
     title: '.conversation-title-container',
     question: '.user-query-container',
-    answer: '.response-container'
+    answer: '.response-container',
+    markdownBlock: '.markdown' // 添加 markdownBlock 选择器，通常 Gemini 的内容在 markdown 类中
   },
 
   extractor: (document, selectors) => {
@@ -225,11 +250,27 @@ const geminiConfig = {
 
     for (let i = 0; i < count; i++) {
       const answerBlock = answers[i];
+      
+      // 使用 _extractContent 处理 HTML 到 Markdown 的转换
+      // 之前是直接 textContent.trim() 导致丢失格式
+      let content = '';
+      
+      // 尝试查找 markdown 容器
+      // Gemini 的结构通常是 .response-container -> .markdown
+      // 如果找不到，尝试直接转换 answerBlock 的 HTML
+      if (selectors.markdownBlock && answerBlock.querySelector(selectors.markdownBlock)) {
+         content = _extractContent(answerBlock, selectors);
+      } else {
+         // 如果没有特定的 markdown 容器，直接转换整个回答块的 HTML
+         // 这里我们临时构造一个 selector 对象或者直接调用转换函数
+         // 但为了复用 _htmlToMarkdown，我们需要获取 innerHTML
+         content = _htmlToMarkdown(answerBlock.innerHTML);
+      }
 
       conversations.push({
         question: questions[i].textContent.trim(),
         answer: {
-          content: answerBlock.textContent.trim()
+          content: content
         }
       });
     }
@@ -322,6 +363,13 @@ function _extractContent(answerBlock, selectors) {
   const markdownBlock = answerBlock.querySelector(selectors.markdownBlock);
   if (!markdownBlock) return '';
 
+  return _processMarkdownBlock(markdownBlock, selectors);
+}
+
+/**
+ * 处理Markdown块元素
+ */
+function _processMarkdownBlock(markdownBlock, selectors) {
   let content = '';
 
   // 遍历子节点
@@ -392,41 +440,114 @@ function _extractLanguageFromCodeElement(codeElement) {
 }
 
 /**
- * HTML转Markdown（简化版）
+ * HTML转Markdown（简化版，使用Turndown思想）
  */
 function _htmlToMarkdown(html) {
-  let result = html;
+  if (!html) return '';
+  
+  // 创建临时DOM元素来解析HTML，这样更安全也更准确
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+  const body = doc.body;
 
-  // 移除不需要的标签
-  result = result.replace(/<div[^>]*>/g, '').replace(/<\/div>/g, '');
-  result = result.replace(/<span[^>]*>/g, '').replace(/<\/span>/g, '');
+  // 递归处理节点
+  function processNode(node) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      return node.textContent;
+    }
 
-  // 转换标题
-  result = result.replace(/<h1>/g, '# ').replace(/<\/h1>/g, '\n\n');
-  result = result.replace(/<h2>/g, '## ').replace(/<\/h2>/g, '\n\n');
-  result = result.replace(/<h3>/g, '### ').replace(/<\/h3>/g, '\n\n');
-  result = result.replace(/<h4>/g, '#### ').replace(/<\/h4>/g, '\n\n');
+    if (node.nodeType !== Node.ELEMENT_NODE) {
+      return '';
+    }
 
-  // 转换列表（简化版）
-  result = result.replace(/<li>/g, '- ').replace(/<\/li>/g, '\n');
-  result = result.replace(/<ul>/g, '').replace(/<\/ul>/g, '\n');
-  result = result.replace(/<ol>/g, '').replace(/<\/ol>/g, '\n');
+    let content = '';
+    // 处理子节点
+    node.childNodes.forEach(child => {
+      content += processNode(child);
+    });
 
-  // 转换格式标签
-  result = result.replace(/<strong>/g, '**').replace(/<\/strong>/g, '**');
-  result = result.replace(/<em>/g, '*').replace(/<\/em>/g, '*');
-  result = result.replace(/<code>/g, '`').replace(/<\/code>/g, '`');
+    // 根据标签类型应用Markdown格式
+    const tagName = node.tagName.toLowerCase();
+    
+    switch (tagName) {
+      // 标题
+      case 'h1': return `# ${content}\n\n`;
+      case 'h2': return `## ${content}\n\n`;
+      case 'h3': return `### ${content}\n\n`;
+      case 'h4': return `#### ${content}\n\n`;
+      case 'h5': return `##### ${content}\n\n`;
+      case 'h6': return `###### ${content}\n\n`;
+      
+      // 段落和换行
+      case 'p': return `${content}\n\n`;
+      case 'br': return '\n';
+      case 'hr': return '---\n\n';
+      case 'div': return `${content}\n`; // div通常用于布局，但也可能包含文本
+      
+      // 强调
+      case 'strong':
+      case 'b': return `**${content}**`;
+      case 'em':
+      case 'i': return `*${content}*`;
+      
+      // 代码
+      case 'code': 
+        // 避免在pre中的code再次被包裹
+        if (node.parentElement && node.parentElement.tagName.toLowerCase() === 'pre') {
+          return content;
+        }
+        return `\`${content}\``;
+      case 'pre':
+        // 尝试提取语言
+        const langClass = node.querySelector('code')?.className || '';
+        const langMatch = langClass.match(/language-(\w+)/);
+        const lang = langMatch ? langMatch[1] : '';
+        return `\n\`\`\`${lang}\n${content.trim()}\n\`\`\`\n\n`;
+        
+      // 列表
+      case 'ul': return `${content}\n`;
+      case 'ol': return `${content}\n`;
+      case 'li':
+        // 简单的列表处理，不处理嵌套深度
+        const parentTag = node.parentElement ? node.parentElement.tagName.toLowerCase() : 'ul';
+        const prefix = parentTag === 'ol' ? '1. ' : '- ';
+        return `${prefix}${content}\n`;
+        
+      // 链接
+      case 'a':
+        const href = node.getAttribute('href');
+        return href ? `[${content}](${href})` : content;
+        
+      // 引用
+      case 'blockquote': return `> ${content.trim().replace(/\n/g, '\n> ')}\n\n`;
+      
+      // 表格 (简化处理)
+      case 'table': return `\n${content}\n`;
+      case 'tr': return `| ${content.trim()} |\n`;
+      case 'th':
+      case 'td': return `${content.trim()} |`;
+      // 表头分隔线需要在完整表格处理中生成，这里简化处理可能不够完美
+      
+      // 默认直接返回内容
+      default: return content;
+    }
+  }
 
-  // 转换段落和换行
-  result = result.replace(/<p>/g, '').replace(/<\/p>/g, '\n\n');
-  result = result.replace(/<br\s*\/?>/g, '\n');
-  result = result.replace(/<hr[^>]*>/g, '---\n\n');
-
+  // 开始处理
+  let markdown = processNode(body);
+  
+  // 后处理：清理多余换行
+  markdown = markdown.replace(/\n{3,}/g, '\n\n').trim();
+  
   // HTML实体解码
-  result = result.replace(/&lt;/g, '<').replace(/&gt;/g, '>');
-  result = result.replace(/&amp;/g, '&').replace(/&quot;/g, '"');
+  markdown = markdown
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&nbsp;/g, ' ');
 
-  return result.trim();
+  return markdown;
 }
 
 // ===== 导出配置 =====

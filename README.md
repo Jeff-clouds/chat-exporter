@@ -1,106 +1,115 @@
-# AI 会话导出 Chrome 插件
+# AI Chat Exporter (AI 对话导出助手)
 
-适用于 Chrome 浏览器
+<div align="center">
 
-## 功能概述
+[![Chrome Web Store](https://img.shields.io/badge/Chrome_Web_Store-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white)](https://chromewebstore.google.com/detail/ai-chat-exporter/eplnkdnnbmmijjadnabdefmjnjgapigm)
+[![Edge Add-ons](https://img.shields.io/badge/Edge_Add--ons-0078D7?style=for-the-badge&logo=microsoft-edge&logoColor=white)](https://microsoftedge.microsoft.com/addons/detail/ai-chat-exporter/kjhchmmjjffhhgaoocijicockllaoaah)
+[![License](https://img.shields.io/badge/license-ISC-green.svg)](LICENSE)
 
-该插件用于下载 AI 对话平台的当前会话数据，包括用户问题和 AI 回答，以便存档或离线查看。
+**一键导出 AI 对话记录，完美保留格式与上下文**
 
-## 特性
+[English README](README_EN.md) | [中文文档](README.md)
 
-- **完整导出**：包含所有对话内容，包括用户输入和 AI 响应
-- **Markdown 格式**：自动格式化导出内容，支持代码高亮和排序列表
-- **本地存储**：导出文件可下载为 `.md` 文件，方便查看和编辑
-- **多平台支持**：支持 DeepSeek、元宝AI、ChatGPT 和豆包 四个平台的对话导出
-- **智能识别**：自动识别当前页面并选择合适的导出策略
-- **详细反馈**：提供导出状态提示和错误信息
+</div>
 
-## 下载安装
+## 📖 简介
 
-1. 在 [Releases](https://github.com/Jeff-clouds/chat-exporter/releases) 页面下载最新版本的扩展文件
-2. 解压下载的压缩包到本地文件夹
+**AI Chat Exporter** 是一款强大的浏览器扩展，专为保存和归档 AI 对话而设计。它能够将您与 AI 的对话内容一键导出为格式精美的 Markdown 文件，完美支持代码块高亮、数学公式、表格以及 AI 的思考过程。
 
-## 安装步骤
+无论您是开发者、研究人员还是学生，这款工具都能帮您轻松建立个人知识库，让稍纵即逝的 AI 灵感永久保存。
 
-1. 打开 Chrome 浏览器，进入扩展管理页面：
-   - 在地址栏输入 `chrome://extensions/` 或
-   - 点击浏览器右上角菜单 → 更多工具 → 扩展程序
-2. 开启右上角的 **开发者模式**
-3. 点击 **加载已解压的扩展程序**
-4. 选择之前解压的文件夹
+## ✨ 核心特性
 
-## 使用方法
+- **多平台支持**：完美适配 DeepSeek、腾讯元宝、ChatGPT、豆包、Gemini 等主流 AI 平台。
+- **完美格式保留**：基于 `Turndown` + `GFM` 引擎，精准还原 HTML 为 Markdown。
+  - ✅ **代码块**：保留语言标记，支持嵌套代码。
+  - ✅ **表格**：完美支持 Markdown 表格格式。
+  - ✅ **数学公式**：保留 LaTeX 原始格式。
+  - ✅ **任务列表**：支持 `[ ]` 和 `[x]` 语法。
+- **深度内容提取**：
+  - 🧠 **思考过程**：完整保留 DeepSeek/元宝 等模型的推理思考链。
+  - 🔍 **搜索来源**：保留联网搜索引用的参考链接。
+- **隐私安全**：所有处理均在**本地浏览器**完成，绝不上传任何数据到服务器。
+- **结构清晰**：自动生成 `# Question` / `## Answer` 的标准化目录结构，便于阅读和索引。
 
-1. 安装完成后，进入支持的 AI 对话平台
-2. 点击浏览器工具栏中的插件图标
-3. 点击 "Export Chat" 按钮，文件将自动下载到浏览器默认下载路径
+## 🚀 支持平台
 
-## 支持的网站
+| 平台 | 网址 | 支持内容 |
+|------|------|----------|
+| **DeepSeek** | deepseek.com | 对话、思考过程 (R1)、代码、搜索结果 |
+| **腾讯元宝** | yuanbao.tencent.com | 对话、深度思考、参考链接、卡片内容 |
+| **ChatGPT** | chatgpt.com | 对话、代码块、复杂嵌套结构 |
+| **豆包 (Doubao)** | doubao.com | 对话、搜索来源 |
+| **Gemini** | gemini.google.com | 对话、草稿内容 |
 
-- ✅ DeepSeek Chat (deepseek.com, deepseek.ai)
-- ✅ 元宝AI (yuanbao.tencent.com)
-- ✅ ChatGPT (chatgpt.com)
-- ✅ 豆包AI (doubao.com)
+## 📥 下载安装
 
-## 更新日志
+### 方式一：应用商店安装（推荐）
 
-### v1.4.0 (2025-12-04)
-- 🔧 重构代码架构，采用管道模式
-- 🚀 代码行数减少 40%，提升维护性
-- ✨ 选择器配置与处理逻辑完全分离
-- 📦 添加新平台工作量减少 70%
-- 🎯 统一数据结构，提升扩展性
-- 🧪 改进错误处理和用户反馈
+- **Chrome 用户**：[前往 Chrome 应用商店下载](https://chromewebstore.google.com/detail/ai-chat-exporter/eplnkdnnbmmijjadnabdefmjnjgapigm)
+- **Edge 用户**：[前往 Edge 插件商店下载](https://microsoftedge.microsoft.com/addons/detail/ai-chat-exporter/kjhchmmjjffhhgaoocijicockllaoaah)
 
-### v1.3.0 (2025-03-19)
-- 新增 ChatGPT 平台支持
-- 新增 豆包AI 平台支持
-- 优化代码块导出格式
-- 改进错误处理和用户反馈
-- 修复版本号不一致问题
+### 方式二：手动安装（开发者模式）
 
-### v1.2.0 (2025-02-28)
-- 初始版本发布
-- 支持 DeepSeek 和元宝AI
+如果您想体验最新开发版功能：
 
-## 未来改进方向
+1. 克隆本项目到本地：
+   ```bash
+   git clone https://github.com/Jeff-clouds/chat-exporter.git
+   ```
+2. 安装依赖并构建（确保已安装 Node.js）：
+   ```bash
+   npm install
+   # 复制库文件到 src/lib
+   npm run build-lib  # (如果有此脚本) 或者手动复制 turndown.js 到 src/lib
+   ```
+   *注意：本项目依赖 `turndown` 和 `turndown-plugin-gfm`，请确保 `src/lib/` 目录下有相应的 js 文件。*
 
-- [ ] 支持 JSON、TXT 等多种格式导出
-- [ ] 提供 UI 配置选项，允许用户选择导出范围
-- [ ] 支持更多AI对话平台
-- [ ] 添加导出预览功能
-- [ ] 支持批量导出功能
-- [ ] 添加导出历史记录
+3. 打开 Chrome/Edge 浏览器，进入扩展管理页 (`chrome://extensions/` 或 `edge://extensions/`)。
+4. 开启右上角的 **"开发者模式"**。
+5. 点击 **"加载已解压的扩展程序"**，选择本项目文件夹。
 
-## 常见问题
+## 💡 使用指南
 
-**Q: 导出失败怎么办？**
-A: 请确保您在支持的网站对话页面上，并且页面已完全加载。如果问题仍然存在，请尝试刷新页面后重新导出。
+1. 打开任意支持的 AI 对话页面（如 [chatgpt.com](https://chatgpt.com)）。
+2. 点击浏览器右上角的 **AI Chat Exporter** 图标。
+3. 等待插件自动识别当前平台。
+4. 点击 **"Export Chat"** 按钮。
+5. 稍等片刻，Markdown 文件将自动下载到您的本地设备。
 
-**Q: 支持哪些导出格式？**
-A: 目前仅支持 Markdown 格式，未来会支持更多格式。
+## 🛠️ 开发与贡献
 
-**Q: 导出的文件保存在哪里？**
-A: 文件会保存到您浏览器的默认下载路径。
+欢迎提交 Issue 或 Pull Request！
+
+### 项目结构
+- `src/background.js`: 核心逻辑，负责注入脚本、提取内容和转换 Markdown。
+- `src/config/selectors.js`: 各平台的 DOM 选择器配置。
+- `src/utils/`: 工具函数（Markdown 生成、下载管理等）。
+- `src/lib/`: 第三方依赖库 (Turndown)。
+
+### 本地开发
+```bash
+# 安装依赖
+npm install
+
+# 更新依赖库文件 (需要手动将 node_modules 中的 dist 文件复制到 src/lib)
+cp node_modules/turndown/dist/turndown.js src/lib/
+cp node_modules/turndown-plugin-gfm/dist/turndown-plugin-gfm.js src/lib/
+```
+
+## 📄 隐私政策
+
+**AI Chat Exporter** 承诺：
+- **不收集数据**：我们不收集您的任何对话内容、个人信息或浏览历史。
+- **离线运行**：除了检查更新外，插件不需要连接任何第三方服务器。
+- **本地存储**：所有导出文件均直接保存至您的计算机。
+
+## ⚖️ 许可证
+
+本项目基于 [ISC 许可证](LICENSE) 开源。
 
 ---
 
-如有问题或建议，欢迎在 Issues 中反馈！
-
-# 其他方案
-
-选择建议：
-首先尝试使用 DOM 选择器，因为：
-语法更简单
-性能更好
-代码更易读
-在以下情况切换到 XPath：
-DOM 选择器无法准确定位元素
-需要基于文本内容选择元素
-需要复杂的条件组合
-处理动态生成的类名
-可以结合使用：
-先用 DOM 选择器缩小范围
-再用 XPath 精确定位
-
-XHR：API 调用、数据获取、表单提交
+<div align="center">
+如果这个项目对您有帮助，请给我们在 GitHub 上点个 ⭐ Star！
+</div>
