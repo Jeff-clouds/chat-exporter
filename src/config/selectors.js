@@ -81,8 +81,8 @@ const chatgptConfig = {
 
   selectors: {
     conversation: '[data-testid^="conversation-turn-"]', // 增加 conversation 容器，使用 data-testid 鲁棒性更高
-    question: '[data-message-author-role="user"] .whitespace-pre-wrap',
-    answer: '[data-message-author-role="assistant"]',
+    question: '[data-turn="user"] .whitespace-pre-wrap',
+    answer: '[data-turn="assistant"]',
     markdownBlock: '.markdown.prose'
   },
 
