@@ -28,5 +28,11 @@
     "https://chatgpt.com/*",
     "https://gemini.google.com/*",
     "https://*.doubao.com/*"
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["src/config/selectors.js"],
+      "matches": ["<all_urls>"]
+    }
   ]
 }
