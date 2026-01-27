@@ -18,6 +18,7 @@ const deepseekConfig = {
   urlPatterns: ['deepseek.com', 'deepseek.ai'],
 
   selectors: {
+    conversation: null, // 待填入：对话容器选择器 (优先使用此嵌套模式)
     title: '.f8d1e4c0',
     question: '._9663006',
     answer: '._4f9bf79._43c05b5',
@@ -46,6 +47,7 @@ const yuanbaoConfig = {
   urlPatterns: ['yuanbao.tencent.com'],
 
   selectors: {
+    conversation: null, // 待填入：对话容器选择器 (优先使用此嵌套模式)
     title: '.agent-dialogue__content--common__header',
     question: '.agent-chat__bubble--human',
     answer: '.agent-chat__bubble--ai',
@@ -78,6 +80,7 @@ const chatgptConfig = {
   urlPatterns: ['chatgpt.com'],
 
   selectors: {
+    conversation: '[data-testid^="conversation-turn-"]', // 增加 conversation 容器，使用 data-testid 鲁棒性更高
     question: '[data-message-author-role="user"] .whitespace-pre-wrap',
     answer: '[data-message-author-role="assistant"]',
     markdownBlock: '.markdown.prose'
@@ -97,6 +100,7 @@ const doubaoConfig = {
   urlPatterns: ['doubao.com'],
 
   selectors: {
+    conversation: null, // 待填入：对话容器选择器 (优先使用此嵌套模式)
     question: '.message-content.message-box-content-otxGGw.send-message-box-content-N1r3Gh.samantha-message-box-content-Qjmpja',
     answer: '.message-content.message-box-content-otxGGw.receive-message-box-content-_lREFj.samantha-message-box-content-Qjmpja',
     search: '.search-result-collapse-header-O_cFO3'
@@ -118,6 +122,7 @@ const geminiConfig = {
   urlPatterns: ['gemini.google.com'],
 
   selectors: {
+    conversation: '.conversation-container', // 待填入：对话容器选择器 (优先使用此嵌套模式)
     title: '.conversation-title-container',
     question: '.user-query-container',
     answer: '.response-container',
@@ -169,59 +174,85 @@ export function extractUnifiedData(url) {
   const { key: platformKey, name, selectors, features = {} } = platformConfig;
   const conversations = [];
 
-  const questions = document.querySelectorAll(selectors.question);
-  const answers = document.querySelectorAll(selectors.answer);
-  const count = Math.min(questions.length, answers.length);
-
   let title = `${platformKey}-chat`;
   if (selectors.title) {
     const titleEl = document.querySelector(selectors.title);
     title = titleEl?.textContent?.trim() || title;
-  } else if (features.titleFromFirstQuestion) {
-    title = questions[0]?.textContent?.trim().substring(0, 50) || title;
   }
 
-  for (let i = 0; i < count; i++) {
-    const question = questions[i]?.textContent?.trim() || '';
-    const answerBlock = answers[i];
+  // 1. 优先尝试使用嵌套模式 (Conversation Item)
+  if (selectors.conversation) {
+    const items = document.querySelectorAll(selectors.conversation);
+    if (items.length > 0) {
+      items.forEach(item => {
+        const questionEl = item.querySelector(selectors.question);
+        const answerBlock = item.querySelector(selectors.answer);
+        
+        if (questionEl && answerBlock) {
+          const question = questionEl.textContent?.trim() || '';
+          const answer = _processAnswer(answerBlock, selectors, features);
+          conversations.push({ question, answer });
+        }
+      });
+    }
+  }
 
-    const answer = {};
+  // 2. 如果没有找到 items 或没配置 conversation 选择器，回退到扁平模式 (Flat Mode)
+  if (conversations.length === 0) {
+    const questions = document.querySelectorAll(selectors.question);
+    const answers = document.querySelectorAll(selectors.answer);
+    const count = Math.min(questions.length, answers.length);
 
-    if (features.hasThinking && selectors.thinking) {
-      answer.thinking = _extractThinking(answerBlock, selectors);
+    if (features.titleFromFirstQuestion && !selectors.title) {
+      title = questions[0]?.textContent?.trim().substring(0, 50) || title;
     }
 
-    if (features.hasSearch && selectors.search) {
-      if (features.searchWithLinks) {
-        answer.search = _extractSearchWithLinks(answerBlock, selectors);
-      } else if (features.searchAsText) {
-        answer.search = answerBlock.querySelector(selectors.search)?.textContent?.trim() || '';
-      } else {
-        answer.search = _extractSearch(answerBlock, selectors, features);
-      }
+    for (let i = 0; i < count; i++) {
+      const question = questions[i]?.textContent?.trim() || '';
+      const answerBlock = answers[i];
+      const answer = _processAnswer(answerBlock, selectors, features);
+      conversations.push({ question, answer });
     }
-
-    let contentBlock = answerBlock;
-    if (features.removeThinkingBeforeContent && selectors.thinking) {
-      const clone = answerBlock.cloneNode(true);
-      clone.querySelectorAll(selectors.thinking).forEach(el => el.remove());
-      contentBlock = clone;
-    }
-
-    if (features.useTextContent) {
-      answer.content = contentBlock.textContent.trim();
-    } else {
-      answer.content = _extractContent(contentBlock, selectors);
-    }
-
-    if (features.hasCodeBlocks && selectors.codeBlock) {
-      answer.codeBlocks = _extractCodeBlocks(contentBlock, selectors);
-    }
-
-    conversations.push({ question, answer });
   }
 
   return { title, conversations, platform: name, url };
+}
+
+function _processAnswer(answerBlock, selectors, features) {
+  const answer = {};
+
+  if (features.hasThinking && selectors.thinking) {
+    answer.thinking = _extractThinking(answerBlock, selectors);
+  }
+
+  if (features.hasSearch && selectors.search) {
+    if (features.searchWithLinks) {
+      answer.search = _extractSearchWithLinks(answerBlock, selectors);
+    } else if (features.searchAsText) {
+      answer.search = answerBlock.querySelector(selectors.search)?.textContent?.trim() || '';
+    } else {
+      answer.search = _extractSearch(answerBlock, selectors, features);
+    }
+  }
+
+  let contentBlock = answerBlock;
+  if (features.removeThinkingBeforeContent && selectors.thinking) {
+    const clone = answerBlock.cloneNode(true);
+    clone.querySelectorAll(selectors.thinking).forEach(el => el.remove());
+    contentBlock = clone;
+  }
+
+  if (features.useTextContent) {
+    answer.content = contentBlock.textContent.trim();
+  } else {
+    answer.content = _extractContent(contentBlock, selectors);
+  }
+
+  if (features.hasCodeBlocks && selectors.codeBlock) {
+    answer.codeBlocks = _extractCodeBlocks(contentBlock, selectors);
+  }
+
+  return answer;
 }
 
 function _extractThinking(answerBlock, selectors) {

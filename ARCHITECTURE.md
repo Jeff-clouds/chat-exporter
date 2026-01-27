@@ -51,6 +51,59 @@ AI chat exporter temp/
 
 ---
 
+## 🎯 选择器配置与提取逻辑
+
+### 1. 提取层级结构 (Hierarchy)
+
+为了提高提取的准确性和稳定性，系统采用**嵌套提取模式**，并支持自动降级。
+
+**层级关系：**
+```
+Conversation Item (对话容器)
+    ├── Question (问)
+    └── Answer (答)
+          ├── Thinking (思考过程 - 可选)
+          ├── Search (搜索来源 - 可选)
+          ├── CodeBlocks (代码块 - 可选)
+          └── Content (正式回答)
+```
+
+### 2. 字段可空性与降级策略 (Nullability & Fallback)
+
+*   **完全可空**：配置中的所有选择器字段（包括 `conversation`、`thinking`、`search`）均可为 `null`。
+*   **自动降级**：
+    *   如果 `conversation` 选择器未配置 (null) 或未找到元素，系统将自动**降级为扁平模式** (Flat Mode)，分别查找所有的 Question 和 Answer 并按索引匹配。
+    *   如果 `thinking` 或 `search` 未配置，则跳过对应内容的提取，不影响主内容的获取。
+
+### 3. 选择器鲁棒性排序 (Robustness Ranking)
+
+在配置选择器时，应遵循以下优先级，以应对网站改版：
+
+1.  **`data-testid` / `data-id`** (最稳定，专为测试设计)
+2.  **`aria-label`** (较稳定，无障碍属性)
+3.  **`role`** 属性
+4.  **语义化类名** (如 `.message-content`, `.user-query`)
+5.  **标签层级** (如 `article > h3`)
+6.  **混淆类名** (最不稳定，如 `.css-1a2b3c`，尽量避免)
+
+### 4. 示例配置
+
+```javascript
+const platformConfig = {
+  // ...
+  selectors: {
+    conversation: '[data-testid="conversation-item"]', // 优先使用嵌套模式
+    question: '[data-testid="user-message"]',
+    answer: '[data-testid="model-response"]',
+    thinking: '.thinking-process', // 可选，若无则设为 null
+    search: null, // 不提取搜索源
+    // ...
+  }
+};
+```
+
+---
+
 ## 🔧 模块说明
 
 ### 1. `config/selectors.js` - 平台配置
