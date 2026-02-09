@@ -20,8 +20,8 @@
 
 ## ✨ 核心特性
 
-- **多平台支持**：支持的平台以 `src/config/selectors.js` 与 `manifest.json` 的配置为准。
-- **格式保留**：统一将页面 HTML 内容转换为 Markdown，尽量保留标题、列表、代码块、引用等结构。
+- **多平台支持**：完美适配 DeepSeek、腾讯元宝、ChatGPT、豆包、Gemini 等主流 AI 平台。
+- **完美格式保留**：基于 `Turndown` + `GFM` 引擎，精准还原 HTML 为 Markdown。
   - ✅ **代码块**：保留语言标记，支持嵌套代码。
   - ✅ **表格**：完美支持 Markdown 表格格式。
   - ✅ **数学公式**：保留 LaTeX 原始格式。
@@ -30,14 +30,19 @@
   - 🧠 **思考过程**：完整保留 DeepSeek/元宝 等模型的推理思考链。
   - 🔍 **搜索来源**：保留联网搜索引用的参考链接。
 - **隐私安全**：所有处理均在**本地浏览器**完成，绝不上传任何数据到服务器。
-- **结构清晰**：导出的 Markdown 按对话结构组织：标题 + 问题(二级) + 思考/搜索(三级) + 正文。
-- **元数据**：文件顶部自动写入 YAML Front Matter（URL、平台）。
+- **结构清晰**：自动生成 `# Question` / `## Answer` 的标准化目录结构，便于阅读和索引。
 
 ## 🚀 支持平台
 
-支持的平台与选择器配置集中在 `src/config/selectors.js`。新增平台通常只需要：
-- 在 `selectors.js` 增加平台配置并加入 `SELECTORS`
-- 在 `manifest.json` 增加对应网站的 `host_permissions`
+| 平台 | 网址 | 支持内容 |
+|------|------|----------|
+| **DeepSeek** | deepseek.com | 对话、思考过程 (R1)、代码、搜索结果 |
+| **腾讯元宝** | yuanbao.tencent.com | 对话、深度思考、参考链接、卡片内容 |
+| **ChatGPT** | chatgpt.com | 对话、代码块、复杂嵌套结构 |
+| **豆包 (Doubao)** | doubao.com | 对话、搜索来源 |
+| **Gemini** | gemini.google.com | 对话、草稿内容 |
+| **Grok** | grok.com | 对话、Markdown 内容 |
+| **Kimi** | kimi.com | 对话、代码块、Markdown 格式 |
 
 ## 📥 下载安装
 
@@ -54,7 +59,13 @@
    ```bash
    git clone https://github.com/Jeff-clouds/chat-exporter.git
    ```
-2. 直接加载项目目录即可，无需额外构建步骤。
+2. 安装依赖并构建（确保已安装 Node.js）：
+   ```bash
+   npm install
+   # 复制库文件到 src/lib
+   npm run build-lib  # (如果有此脚本) 或者手动复制 turndown.js 到 src/lib
+   ```
+   *注意：本项目依赖 `turndown` 和 `turndown-plugin-gfm`，请确保 `src/lib/` 目录下有相应的 js 文件。*
 
 3. 打开 Chrome/Edge 浏览器，进入扩展管理页 (`chrome://extensions/` 或 `edge://extensions/`)。
 4. 开启右上角的 **"开发者模式"**。
@@ -72,13 +83,11 @@
 
 欢迎提交 Issue 或 Pull Request！
 
-> **重要**：开发前请先阅读 [ARCHITECTURE.md](ARCHITECTURE.md) 了解项目架构和设计原则。
-
 ### 项目结构
-- `src/config/selectors.js`: 平台选择器 + 统一提取管道（新增平台只改这里）
-- `manifest.json`: host_permissions（新增平台不可避免需要改这里）
-- `src/background.js`: 负责协调与下载，不包含平台特定逻辑
-- `src/utils/`: Markdown 生成、下载管理等通用模块
+- `src/background.js`: 核心逻辑，负责注入脚本、提取内容和转换 Markdown。
+- `src/config/selectors.js`: 各平台的 DOM 选择器配置。
+- `src/utils/`: 工具函数（Markdown 生成、下载管理等）。
+- `src/lib/`: 第三方依赖库 (Turndown)。
 
 ### 本地开发
 ```bash

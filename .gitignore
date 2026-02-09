@@ -10,6 +10,8 @@ node_modules/
 old/
 unused/
 .trae/
+.qoder/
+old/
 
 # 临时文件
 油猴.json

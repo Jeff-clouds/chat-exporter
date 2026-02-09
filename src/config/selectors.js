@@ -134,6 +134,40 @@ const geminiConfig = {
   }
 };
 
+/**
+ * Grok 平台配置
+ */
+const grokConfig = {
+  name: 'Grok',
+  urlPatterns: ['grok.com'],
+
+  selectors: {
+    conversation: null,
+    question: '.message-bubble:not(:has(.response-content-markdown))',
+    answer: '.response-content-markdown',
+    markdownBlock: null // Grok seems to have direct markdown or simple structure
+  },
+
+  features: {}
+};
+
+/**
+ * Kimi 平台配置
+ */
+const kimiConfig = {
+  name: 'Kimi',
+  urlPatterns: ['kimi.com', 'moonshot.cn'],
+
+  selectors: {
+    conversation: null,
+    question: '.user-content',
+    answer: '.chat-content-item.chat-content-item-assistant .markdown-container, .markdown-body .markdown-container, [class*="assistant"] .markdown-container',
+    markdownBlock: null // Kimi usually has markdown-container
+  },
+
+  features: {}
+};
+
 // ===== 导出配置 =====
 
 /**
@@ -144,7 +178,9 @@ export const SELECTORS = {
   yuanbao: yuanbaoConfig,
   chatgpt: chatgptConfig,
   doubao: doubaoConfig,
-  gemini: geminiConfig
+  gemini: geminiConfig,
+  grok: grokConfig,
+  kimi: kimiConfig
 };
 
 /**
@@ -363,6 +399,34 @@ function _extractCodeBlocks(answerBlock, selectors) {
 function _htmlToMarkdown(html) {
   if (!html) return '';
 
+  // 1. 尝试使用 Turndown (如果已注入)
+  if (typeof TurndownService !== 'undefined') {
+    try {
+      const turndownService = new TurndownService({
+        headingStyle: 'atx',
+        codeBlockStyle: 'fenced',
+        emDelimiter: '*'
+      });
+      
+      if (typeof turndownPluginGfm !== 'undefined') {
+        turndownService.use(turndownPluginGfm.gfm);
+      }
+      
+      // 清理不需要的标签
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
+      const body = doc.body;
+      const unwanted = body.querySelectorAll('script, style, svg, button, input, select, textarea');
+      unwanted.forEach(el => el.remove());
+      
+      return turndownService.turndown(body);
+    } catch (e) {
+      console.error('Turndown conversion failed:', e);
+      // Fallback to custom implementation
+    }
+  }
+
+  // 2. 自定义兜底实现
   const parser = new DOMParser();
   const doc = parser.parseFromString(html, 'text/html');
   const body = doc.body;

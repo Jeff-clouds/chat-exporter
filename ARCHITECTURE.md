@@ -26,8 +26,8 @@ AI chat exporter temp/
 │   ├── config/                    # 配置文件
 │   │   └── selectors.js           # 所有平台选择器配置和提取函数
 │   │
-│   ├── extractors/                # 提取器模块
-│   │   └── content-extractors.js  # 通用内容提取函数库（IIFE格式，注入页面）
+│   ├── extractors/                # [遗留] 提取器模块
+│   │   └── content-extractors.js  # [遗留] 通用内容提取函数库
 │   │
 │   ├── utils/                     # 工具函数
 │   │   ├── sanitizer.js           # 文件名和内容清理工具
@@ -35,8 +35,8 @@ AI chat exporter temp/
 │   │   └── markdown-generator.js  # Markdown生成器
 │   │
 │   ├── lib/                       # 第三方库
-│   │   ├── turndown.js            # HTML转Markdown库
-│   │   └── turndown-plugin-gfm.js # GFM支持插件
+│   │   ├── turndown.js            # HTML转Markdown库 (核心)
+│   │   └── turndown-plugin-gfm.js # GFM支持插件 (核心)
 │   │
 │   └── background.js              # 主入口（Service Worker）
 │
@@ -289,7 +289,7 @@ const newPlatformConfig = {
     title: '.title-selector',
     question: '.question-selector',
     answer: '.answer-selector',
-    markdownBlock: '.markdown-content',  // 可选
+    markdownBlock: '.markdown-content',  // 可选：如果有直接的Markdown容器
     // 可选：需要在HTML转Markdown前移除的元素
     cleanupSelectors: [
       '.reference-badge',  // 引用标注
@@ -297,28 +297,10 @@ const newPlatformConfig = {
       'sup'                // 上标
     ]
   },
-  extractor: (document, selectors) => {
-    // 提取逻辑
-    const conversations = [];
-
-    const title = document.querySelector(selectors.title)?.textContent || 'chat';
-    const questions = document.querySelectorAll(selectors.question);
-    const answers = document.querySelectorAll(selectors.answer);
-
-    const count = Math.min(questions.length, answers.length);
-
-    for (let i = 0; i < count; i++) {
-      conversations.push({
-        question: questions[i].textContent.trim(),
-        answer: {
-          // 使用 ContentExtractors 提取内容
-          content: ContentExtractors.extractContent(answers[i], selectors)
-          // 根据平台特性添加thinking、search、codeBlocks等
-        }
-      });
-    }
-
-    return { title, conversations };
+  features: {
+    hasThinking: true,      // 是否有思考过程
+    hasSearch: false,       // 是否有搜索结果
+    hasCodeBlocks: true     // 是否有代码块
   }
 };
 ```
@@ -473,5 +455,5 @@ src/
 
 ---
 
-**文档版本**: 2.0
-**更新日期**: 2026-01-27
+**文档版本**: 2.1
+**更新日期**: 2026-02-07

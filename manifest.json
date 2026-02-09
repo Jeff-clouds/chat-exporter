@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "AI Chat Exporter",
-  "version": "1.5.1",
-  "description": "Export DeepSeek, YuanBao AI, ChatGPT and Doubao chat conversations to Markdown format.",
+  "version": "1.5.2",
+  "description": "Export DeepSeek, YuanBao AI, ChatGPT, Doubao, Gemini, Grok and Kimi chat conversations to Markdown format.",
   "permissions": ["activeTab", "downloads", "scripting", "tabs", "notifications"],
   "background": {
     "service_worker": "src/background.js",
@@ -27,7 +27,10 @@
     "https://*.yuanbao.tencent.com/*",
     "https://chatgpt.com/*",
     "https://gemini.google.com/*",
-    "https://*.doubao.com/*"
+    "https://*.doubao.com/*",
+    "https://grok.com/*",
+    "https://kimi.com/*",
+    "https://*.moonshot.cn/*"
   ],
   "web_accessible_resources": [
     {

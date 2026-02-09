@@ -78,6 +78,12 @@ async function handleDownload() {
   // 3. Inject script to extract data
   console.log('Step 3: Injecting script to extract data...');
 
+  // Inject Turndown libraries first
+  await chrome.scripting.executeScript({
+    target: { tabId: tab.id },
+    files: ['src/lib/turndown.js', 'src/lib/turndown-plugin-gfm.js']
+  });
+
   const [result] = await chrome.scripting.executeScript({
     target: { tabId: tab.id },
     func: async (url) => {

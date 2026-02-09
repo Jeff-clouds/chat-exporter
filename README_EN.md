@@ -41,6 +41,8 @@ Whether you are a developer, researcher, or student, this tool helps you easily 
 | **ChatGPT** | chatgpt.com | Chat, Code Blocks, Complex Nested Structures |
 | **Doubao** | doubao.com | Chat, Search Sources |
 | **Gemini** | gemini.google.com | Chat, Draft Content |
+| **Grok** | grok.com | Chat, Markdown Content |
+| **Kimi** | kimi.com | Chat, Code Blocks, Markdown Format |
 
 ## 📥 Installation
 
