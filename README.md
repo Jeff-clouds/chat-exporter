@@ -1,6 +1,6 @@
 # AI Chat Exporter (AI 对话导出助手)
 
-[![Star History Chart](https://api.star-history.com/svg?repos=Jeff-clouds/chat-exporter&type=Date)](https://star-history.com/#Jeff-clouds/chat-exporter&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=Jeff-clouds/chat-exporter&type=Date&width=500&height=300)](https://star-history.com/#Jeff-clouds/chat-exporter&Date)
 
 <div align="center">
 
