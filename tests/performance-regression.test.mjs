@@ -41,7 +41,7 @@ assert.match(indexSource, /scanChatGptDom\(\{ cacheMessages: true \}\)/);
 assert.match(indexSource, /observeChatGpt\(\)/);
 assert.match(indexSource, /scheduleChatGptScan/);
 assert.match(indexSource, /MAX_MOUNTED_CHATGPT_TURNS = 48/);
-assert.match(indexSource, /2026-08-27-descendant-message-identity/);
+assert.match(indexSource, /2026-08-31-doubao-media-message/);
 assert.match(indexSource, /getChatGptLoadState\(\)/);
 assert.match(indexSource, /\[data-message-author-role\]/);
 const pipelineSource = fs.readFileSync(new URL('../src/core/pipeline.js', import.meta.url), 'utf8');
@@ -294,6 +294,54 @@ assert.match(bridgeSource, /activeControllers/);
     await new Promise(resolve => setTimeout(resolve, 250));
     assert.equal(index.records.has('m2'), true, 'trailing scan must retain an intermediate virtual window id');
     assert.equal(cloneCount, clonesAfterLeadingScan + 1, 'trailing scan must convert only the newly mounted message');
+}
+
+// 豆包纯图片用户消息没有文字气泡，但必须保留为用户侧媒体记录，不能默认落为 assistant 后丢弃。
+{
+    const makeMessage = ({ id, text, userMedia = false }) => ({
+        textContent: text,
+        innerHTML: userMedia ? '<div data-plugin-identifier="block_type:10052"><img></div>' : `<p>${text}</p>`,
+        getAttribute: name => name === 'data-message-id' ? id : '',
+        matches: selector => userMedia && selector === '[data-message-id].flex-row.justify-end',
+        querySelector: selector => userMedia && selector.includes('block_type:10052') ? {} : null,
+        querySelectorAll: selector => selector === 'img' && userMedia ? [{}] : [],
+        getBoundingClientRect: () => ({ top: userMedia ? 10 : 80 }),
+        cloneNode() {
+            return {
+                textContent: this.textContent,
+                innerHTML: this.innerHTML,
+                querySelectorAll: () => []
+            };
+        }
+    });
+    const mountedMessages = [
+        makeMessage({ id: 'image-user', text: '', userMedia: true }),
+        makeMessage({ id: 'image-answer', text: 'image answer' })
+    ];
+    const scroller = { scrollTop: 0, getBoundingClientRect: () => ({ top: 0 }) };
+    const window = { addEventListener() {}, removeEventListener() {}, dispatchEvent() {} };
+    const context = {
+        window,
+        location: { href: 'https://www.doubao.com/chat/image-fixture', pathname: '/chat/image-fixture', origin: 'https://www.doubao.com' },
+        document: {
+            title: '',
+            querySelectorAll: selector => selector === '[data-message-id]' ? mountedMessages : [],
+            querySelector: selector => selector.includes('scroller') ? scroller : null
+        },
+        MutationObserver: class {},
+        setTimeout,
+        clearTimeout,
+        CustomEvent: class {},
+        console
+    };
+    vm.runInNewContext(indexSource, context);
+    const index = window.AI_CHAT_CONVERSATION_INDEX;
+    index.platform = 'DOUBAO';
+    assert.equal(index.scanDoubaoWindow(), true);
+    assert.equal(index.records.get('image-user').media.imageCount, 1);
+    assert.equal(index.records.get('image-user').role, 'user');
+    assert.equal(index.records.get('image-user').text, '[图片]');
+    assert.equal(index.toUnifiedData().conversations[0].question, '[图片]');
 }
 
 // ChatGPT：会话根 observer + capture scroll 都会自动增量扫描并通知。

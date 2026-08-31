@@ -3,7 +3,7 @@
 
     const CHATGPT_API = /chatgpt\.com/;
     const DOUBAO = /doubao\.com/;
-    const INDEX_VERSION = '2026-08-27-descendant-message-identity';
+    const INDEX_VERSION = '2026-08-31-doubao-media-message';
     const CHATGPT_REQUEST_TIMEOUT_MS = 20000;
     const CHATGPT_CACHE_TTL_MS = 15000;
     const MAX_CACHED_CONVERSATIONS = 2;
@@ -128,6 +128,11 @@
 
     function doubaoElementFingerprint(element, role) {
         return `${role}|${cleanText(element?.textContent)}|${element?.innerHTML?.length || 0}`;
+    }
+
+    function doubaoMedia(element) {
+        const imageCount = element?.querySelectorAll?.('img')?.length || 0;
+        return imageCount > 0 ? { imageCount } : null;
     }
 
     class ConversationIndex {
@@ -770,7 +775,14 @@
         }
 
         isDoubaoUserMessage(element) {
-            return !!element.querySelector('[class*="send-msg"], [class*="send_message"], [class*="user-bubble"], [class*="bubble-bg"]');
+            if (element.querySelector('[class*="send-msg"], [class*="send_message"], [class*="user-bubble"], [class*="bubble-bg"]')) {
+                return true;
+            }
+            // Current Doubao image uploads are right-aligned message blocks with no text bubble.
+            // Require both the user-side layout and the observed image block marker so unknown
+            // system/tool cards still use the conservative assistant fallback below.
+            return !!element.matches?.('[data-message-id].flex-row.justify-end')
+                && !!element.querySelector('[data-plugin-identifier="block_type:10052"] img');
         }
 
         scanDoubaoWindow() {
@@ -785,6 +797,10 @@
                 const clone = element.cloneNode(true);
                 clone.querySelectorAll('button, svg, script, style, [class*="avatar"], [class*="action"], [class*="tool"], [class*="time"], [class*="think"], [class*="collapse"]').forEach(node => node.remove());
                 const text = cleanText(clone.textContent);
+                const media = doubaoMedia(element);
+                // Keep a stable, exportable record for a user image without retaining its URL
+                // or pretending that it contains textual question content.
+                const retainedText = text || (media ? '[图片]' : '');
                 const elementRect = element.getBoundingClientRect?.();
                 // 虚拟列表会回收节点，但该坐标在消息被挂载时代表其真实列表位置。
                 const offset = scroller && scrollerRect && elementRect
@@ -793,9 +809,10 @@
                 changed = this.upsert({
                     id,
                     role,
-                    text,
-                    html: clone.innerHTML,
-                    markdown: markdownFromHtml(clone.innerHTML, text),
+                    text: retainedText,
+                    html: text ? clone.innerHTML : '',
+                    markdown: text ? markdownFromHtml(clone.innerHTML, text) : retainedText,
+                    media,
                     offset,
                     windowIndex: index
                 }) || changed;

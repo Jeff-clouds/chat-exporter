@@ -26,7 +26,7 @@ const payload = {
 
 const helpers = context.window.__AI_CHAT_EXPORT_TESTS__;
 const index = context.window.AI_CHAT_CONVERSATION_INDEX;
-assert.equal(index.version, '2026-08-27-descendant-message-identity');
+assert.equal(index.version, '2026-08-31-doubao-media-message');
 assert.deepEqual(Array.from(helpers.currentBranchNodes(payload), node => node.id), [
   'root', 'user1', 'assistant1', 'user2', 'assistant-2'
 ]);
