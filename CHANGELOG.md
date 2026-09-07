@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.5] - 2026-09-07
+
+### Fixed
+
+- Exclude DeepSeek's host question navigator from question selectors across all three configuration mirrors, avoiding extra outline questions.
+- Keep Yuanbao thinking separate from exported answer content by removing thinking containers from a detached clone before content extraction.
+- Retain recognized Doubao image-only user messages as `[图片]` placeholders with an image count; this does not export image files.
+
+### Verification limits
+
+- Nine automated test files pass. Chrome checks cover the current mounted message windows, including DeepSeek message-row boundaries, Yuanbao thinking/content structure, and Doubao's image-only user node.
+- Updated-extension cold first-open, A-to-B-to-A switching, streaming, long-chat navigation, actual downloads, and side-panel cleanup remain unverified. This release does not claim full-conversation coverage or completed end-to-end acceptance.
+
 ## [2.1.4] - 2026-08-27
 
 ### Fixed

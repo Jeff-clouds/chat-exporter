@@ -19,7 +19,9 @@ const deepseekConfig = {
   selectors: {
     conversation: null,
     title: '.f8d1e4c0.the-header > div > div:first-child',
-    question: '._9663006, ._72b6158',
+    // 2026-09-07 Chrome: ._72b6158 belongs to the host's question navigator,
+    // not the keyed message rows. Including it adds duplicate outline questions.
+    question: '._9663006',
     answer: '._4f9bf79._43c05b5',
     thinking: '.ds-think-content',
     search: '.a6d716f5.db5991dd',
@@ -73,6 +75,7 @@ const yuanbaoConfig = {
   features: {
     hasThinking: true,
     hasSearch: false, // 搜索已整合进 thinking 流程
+    removeThinkingBeforeContent: true, // Thinking is exported separately, not duplicated in content.
     hasCodeBlocks: true,
     titleFromFirstQuestion: true, // header 只显示 "元宝"，改用 first question
     searchWithLinks: false

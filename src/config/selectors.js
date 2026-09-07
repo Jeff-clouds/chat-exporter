@@ -18,7 +18,7 @@ class SelectorManager {
                 "selectors": {
                     "conversation": null,
                     "title": ".f8d1e4c0.the-header > div > div:first-child",
-                    "question": "._9663006, ._72b6158",
+                    "question": "._9663006",
                     "answer": "._4f9bf79._43c05b5",
                     "thinking": ".ds-think-content",
                     "HEADINGS": [
